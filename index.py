@@ -46,8 +46,8 @@ def downloadPPTfromDetailPage(url):
     dateFd = re.findall(r"/cover/(\d+)/cover", imgDataDsrc)[0]
     idStr = re.findall(r"\d+/cover(.+)/", imgDataDsrc)[0]
     fileName = imgTag['alt']
-    durl = f"http://www.yomoer.cn/storeData/ppt/{dateFd}/ppt{idStr}/{fileName}.pptx"
-    durl = quote(durl, safe = string.printable)
+    durl = f"http://www.yomoer.cn/storeData/ppt/{dateFd}/ppt{idStr}/{quote(fileName)}.pptx"
+    # durl = quote(durl)
     dDir = os.path.abspath(os.path.join(os.getcwd(), f'./download/ppt/{dateFd}/'))
     dist = os.path.abspath(os.path.join(dDir, f'{tagStr}&&{fileName}.pptx'))
   except IndexError as err:
@@ -64,5 +64,5 @@ def downloadPPTfromDetailPage(url):
   except HTTPError as e:
     errlog(f'error:{e.code}, {url}')
 
-getDetailPages(0)
+getDetailPages(13)
 # downloadPPTfromDetailPage('http://www.yomoer.cn/template/detail/2833.html')

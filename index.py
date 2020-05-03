@@ -25,7 +25,7 @@ def getDetailPages(page):
   detailRes = urlopen(listUrl)
   detailSoup = BeautifulSoup(detailRes.read(), "html.parser", from_encoding="utf-8")
   tags = detailSoup.select('[data-preview]')
-  if len(tags) == 0 or page > 2:
+  if len(tags) == 0:
     return
   for tag in tags:
     detailId = tag['data-preview']
@@ -39,15 +39,17 @@ def downloadPPTfromDetailPage(url):
   detailRes = urlopen(url)
   detailSoup = BeautifulSoup(detailRes.read(), "html.parser", from_encoding="utf-8")
   imgTag = detailSoup.find(class_="oldImg")
+  tags = detailSoup.select('.catalog-detailmore .tips span')
   imgDataDsrc = imgTag['data-dsrc']
   try:
+    tagStr = ','.join(map(lambda tag: tag.contents[0], tags))
     dateFd = re.findall(r"/cover/(\d+)/cover", imgDataDsrc)[0]
     idStr = re.findall(r"\d+/cover(.+)/", imgDataDsrc)[0]
     fileName = imgTag['alt']
     durl = f"http://www.yomoer.cn/storeData/ppt/{dateFd}/ppt{idStr}/{fileName}.pptx"
     durl = quote(durl, safe = string.printable)
     dDir = os.path.abspath(os.path.join(os.getcwd(), f'./download/ppt/{dateFd}/'))
-    dist = os.path.abspath(os.path.join(dDir, f'{fileName}.pptx'))
+    dist = os.path.abspath(os.path.join(dDir, f'{tagStr}&&{fileName}.pptx'))
   except IndexError as err:
     errlog(f'indexError: {url}')
     return
@@ -62,4 +64,5 @@ def downloadPPTfromDetailPage(url):
   except HTTPError as e:
     errlog(f'error:{e.code}, {url}')
 
-getDetailPages(3)
+getDetailPages(0)
+# downloadPPTfromDetailPage('http://www.yomoer.cn/template/detail/2833.html')

@@ -7,17 +7,22 @@ import re
 import os
 import string
 import time
+import socket
+
+socket.setdefaulttimeout(120) 
 
 def getTime():
   return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
 
 def log(info):
-  with open('log.log', 'a') as myfile:
+  with open('log.log', 'a', encoding="utf-8") as myfile:
     myfile.write(f'[{getTime()}]:{info}\n')
+    myfile.close()
 
 def errlog(err):
-  with open('err.log', 'a') as myfile:
+  with open('err.log', 'a', encoding="utf-8") as myfile:
     myfile.write(f'[{getTime()}]:{err}\n')
+    myfile.close()
 
 def getDetailPages(page):
   listUrl = f'http://www.yomoer.cn/catalog/templateList?catalogCode=PPTmoban&orderBy=4&catalogId=144&pager.offset={12 * page}'
@@ -25,7 +30,7 @@ def getDetailPages(page):
   detailRes = urlopen(listUrl)
   detailSoup = BeautifulSoup(detailRes.read(), "html.parser", from_encoding="utf-8")
   tags = detailSoup.select('[data-preview]')
-  if len(tags) == 0:
+  if len(tags) == 0 or page > 250:
     return
   for tag in tags:
     detailId = tag['data-preview']
@@ -36,8 +41,12 @@ def getDetailPages(page):
 
 def downloadPPTfromDetailPage(url):
   log(url)
-  detailRes = urlopen(url)
-  detailSoup = BeautifulSoup(detailRes.read(), "html.parser", from_encoding="utf-8")
+  try:
+    detailRes = urlopen(url)
+    detailSoup = BeautifulSoup(detailRes.read(), "html.parser", from_encoding="utf-8")
+  except Exception:
+    errlog(f'err, {url}')
+    return
   imgTag = detailSoup.find(class_="oldImg")
   tags = detailSoup.select('.catalog-detailmore .tips span')
   imgDataDsrc = imgTag['data-dsrc']
@@ -61,8 +70,12 @@ def downloadPPTfromDetailPage(url):
       os.makedirs(dDir)
     with open(dist, 'wb') as outfile:
       outfile.write(data)
+      outfile.close()
+    log(f'{fileName} over')
   except HTTPError as e:
-    errlog(f'error:{e.code}, {url}')
+    errlog(f'error:{e.code}, {durl}')
+  except Exception:
+    errlog(f'download error: {durl}')
 
-getDetailPages(13)
-# downloadPPTfromDetailPage('http://www.yomoer.cn/template/detail/2833.html')
+getDetailPages(116)
+# downloadPPTfromDetailPage('http://www.yomoer.cn/template/detail/5244.html')
